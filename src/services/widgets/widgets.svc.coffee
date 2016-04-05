@@ -74,21 +74,38 @@ angular
         setting.initialize()
       return true
 
-    @updateWidgetSettings = (widget, needContentReload=true) ->
+    @updateWidgetSettings = (widget, needContentReload=true, ignoreReach=false) ->
       widget.isEditMode = false
-
       if _.isEmpty(widget.settings)
         $log.warn("ImpacWidgetsSvc: Tried to update widget: #{widget.id} with no settings", widget)
         return false
 
+      changedGlobalSetting = _.find widget.settings, (setting)-> setting.reach == 'dashboard'
+
+      if (changedGlobalSetting && !ignoreReach)
+        return _self.updateAllSameWidgets(widget, ImpacDashboardsSvc.getCurrentDashboard(), changedGlobalSetting)
+
       widget.isLoading = true if needContentReload
       meta = _.reduce(_.map(widget.settings, (set) -> set.toMetadata() ), (result, setMeta) -> angular.merge(result, setMeta))
-      
-      return _self.update(widget, { metadata: meta }).then(
+
+      _self.update(widget, { metadata: meta }).then(
         (updatedWidget) ->
           if needContentReload
             _self.show(updatedWidget).finally( -> updatedWidget.isLoading = false )
       )
+
+    @updateAllSameWidgets = (widget, dashboard, settings) ->
+      sameWidgets = _.filter dashboard.widgets, (wgt)-> wgt.name == widget.name
+
+      ImpacDashboardsSvc.update(dashboard.id, settings.toMetadata()).then (updatedDashboard)->
+        dashboard[settings.paramName] = updatedDashboard[settings.paramName]
+        _.each sameWidgets, (wgt)->
+          wgt.metadata[settings.paramName] = _.cloneDeep settings.toMetadata()[settings.paramName]
+          wgt.isLoading = true;
+          _self.update(wgt, { metadata: wgt.metadata }).then(
+            (updatedWidget) ->
+              _self.show(updatedWidget).finally( -> updatedWidget.isLoading = false )
+          )
 
     @massAssignAll = (metadata) ->
       unless _.isEmpty(metadata)

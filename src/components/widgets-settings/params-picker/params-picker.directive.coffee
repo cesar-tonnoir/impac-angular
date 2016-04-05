@@ -8,20 +8,29 @@ module.controller('SettingParamsPickerCtrl', ($scope) ->
   setting = {}
   setting.key = "params-picker"
   setting.isInitialized = false
+  setting.paramName = $scope.param
 
   setting.initialize = ->
     $scope.sortableOptions = {
       'ui-floating': true,
       tolerance: 'pointer'
     }
+
+    $scope.applyToDashboard = w.metadata[$scope.param].reach == 'dashboard'
+
+    $scope.toggleReach = ->
+      setting.reach = if $scope.applyToDashboard then 'dashboard' else 'widget'
+
+    $scope.toggleReach()
+
     setting.isInitialized = true if _.isEmpty($scope.options)
 
-
-  setting.toMetadata = ->
+  setting.toMetadata = ()->
     param = {}
-    param[$scope.param] = _.compact(_.map $scope.options, (statusOption) ->
-      statusOption.label if statusOption.selected
-    )
+    param[$scope.param] = {
+      values:_.compact _.map $scope.options, (statusOption) -> statusOption.label if statusOption.selected
+      reach: setting.reach
+    }
     return param
 
   w.settings.push(setting)
@@ -39,6 +48,7 @@ module.directive('settingParamsPicker', ($templateCache) ->
       deferred: '='
       param: '@',
       options: '=',
+      hasReach: '='
     },
     link: (scope, elements, attrs) ->
       scope.formattedParam = scope.param.replace('_',' ')
