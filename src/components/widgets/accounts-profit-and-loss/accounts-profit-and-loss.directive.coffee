@@ -38,7 +38,7 @@ module.controller('WidgetAccountsProfitAndLossCtrl', ($scope, $q, ChartFormatter
 
       $scope.dates = w.content.dates
       $scope.unCollapsed = w.metadata.unCollapsed || []
-      
+
       firstDate = $filter('mnoDate')($scope.dates[0], getPeriod())
       lastDate = $filter('mnoDate')($scope.getLastDate(), getPeriod())
       $scope.amountDisplayedOptions[0].label = lastDate
@@ -64,6 +64,8 @@ module.controller('WidgetAccountsProfitAndLossCtrl', ($scope, $q, ChartFormatter
 
       w.width = 6 unless $scope.selectedElements? && $scope.selectedElements.length > 0
 
+    pdfModeHandler() if w.pdfMode
+
   $scope.getElementChartColor = (index) ->
     ChartFormatterSvc.getColor(index)
 
@@ -75,10 +77,10 @@ module.controller('WidgetAccountsProfitAndLossCtrl', ($scope, $q, ChartFormatter
 
   getPeriod = ->
     if w.metadata? && w.metadata.hist_parameters? && w.metadata.hist_parameters.period?
-      w.metadata.hist_parameters.period 
+      w.metadata.hist_parameters.period
     else
       'MONTHLY'
- 
+
   getLastAmount = (element) ->
     _.last(element.totals) if element.totals?
 
@@ -162,6 +164,25 @@ module.controller('WidgetAccountsProfitAndLossCtrl', ($scope, $q, ChartFormatter
     $scope.selectedElements? && $scope.selectedElements.length > 0
   # <---
 
+  pdfModeHandler = ->
+    if w.pdfMode
+      $scope.beforePdfMode = {
+        unCollapsed: angular.copy($scope.unCollapsed)
+        isExpanded: $scope.isExpanded
+      }
+      angular.forEach w.content.summary, (element) ->
+        unless _.find($scope.unCollapsed, ((name) -> element.name == name))
+          $scope.unCollapsed.push(element.name)
+      if !w.isExpanded()
+        w.toggleExpanded(false)
+    else
+      $scope.unCollapsed = $scope.beforePdfMode.unCollapsed
+      if w.isExpanded() != $scope.beforePdfMode.isExpanded
+        w.toggleExpanded(false)
+
+  $scope.$on('pdfModeChange', (event) ->
+    pdfModeHandler() unless w.isLoading
+  )
 
   # Chart formating function
   # --------------------------------------
@@ -194,7 +215,7 @@ module.controller('WidgetAccountsProfitAndLossCtrl', ($scope, $q, ChartFormatter
       }
 
       chartData = ChartFormatterSvc.lineChart(inputData,options)
-      
+
       # calls chart.draw()
       $scope.drawTrigger.notify(chartData)
 

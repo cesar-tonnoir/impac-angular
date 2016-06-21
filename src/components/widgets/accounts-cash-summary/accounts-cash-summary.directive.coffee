@@ -37,6 +37,7 @@ module.controller('WidgetAccountsCashSummaryCtrl', ($scope, $q, ChartFormatterSv
               account.id == w.metadata.selectedElement.id
             ) if statement.accounts?
           )
+    pdfModeHandler() if w.pdfMode
 
   $scope.getLastDate = ->
     $scope.dates[$scope.dates.length-1] if $scope.dates?
@@ -116,6 +117,26 @@ module.controller('WidgetAccountsCashSummaryCtrl', ($scope, $q, ChartFormatterSv
         return true
       w.width = 6 unless $scope.selectedElement?
 
+  pdfModeHandler = ->
+    if w.pdfMode
+      $scope.beforePdfMode = {
+        unCollapsed: angular.copy($scope.unCollapsed)
+        isExpanded: $scope.isExpanded
+      }
+      angular.forEach w.content.summary, (element) ->
+        unless _.find($scope.unCollapsed, ((name) -> element.name == name))
+          $scope.unCollapsed.push(element.name)
+          if !w.isExpanded()
+            w.toggleExpanded(false)
+    else
+      $scope.unCollapsed = $scope.beforePdfMode.unCollapsed
+      if w.isExpanded() != $scope.beforePdfMode.isExpanded
+        w.toggleExpanded(false)
+
+
+  $scope.$on('pdfModeChange', (event) ->
+    pdfModeHandler() unless w.isLoading
+  )
 
   # Chart formating function
   # --------------------------------------
@@ -173,6 +194,7 @@ module.controller('WidgetAccountsCashSummaryCtrl', ($scope, $q, ChartFormatterSv
   # Widget is ready: can trigger the "wait for settigns to be ready"
   # --------------------------------------
   $scope.widgetDeferred.resolve(settingsPromises)
+
 )
 
 module.directive('widgetAccountsCashSummary', ->

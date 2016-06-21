@@ -59,6 +59,8 @@ module.controller('WidgetAccountsBalanceSheetCtrl', ($scope, $q, ImpacWidgetsSvc
 
     initDates()
 
+    pdfModeHandler() if w.pdfMode
+
   $scope.toggleCollapsed = (categoryName) ->
     if categoryName?
       if _.find($scope.unCollapsed, ((name) -> categoryName == name))
@@ -76,6 +78,20 @@ module.controller('WidgetAccountsBalanceSheetCtrl', ($scope, $q, ImpacWidgetsSvc
       else
         return true
 
+  pdfModeHandler = ->
+    if w.pdfMode
+      $scope.beforePdfMode = {
+        unCollapsed: angular.copy($scope.unCollapsed)
+      }
+      angular.forEach $scope.categories, (element) ->
+        unless _.find($scope.unCollapsed, ((name) -> element == name))
+          $scope.unCollapsed.push(element)
+    else
+      $scope.unCollapsed = $scope.beforePdfMode.unCollapsed
+
+  $scope.$on('pdfModeChange', (event) ->
+    pdfModeHandler() unless w.isLoading
+  )
 
   # Mini-settings objects
   # handles the saving of collapsed / uncollapsed list groups.
