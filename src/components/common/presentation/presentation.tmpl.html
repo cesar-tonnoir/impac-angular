@@ -1,0 +1,24 @@
+<button class="btn btn-info" uib-tooltip="Presentation Mode" ng-click="toggle()">
+  <i class="fa fa-desktop" />
+</button>
+
+<div ng-show="enabled" class="panel">
+  <div class="top">
+    <i class="fa fa-times pull-right" ng-click="toggle()"/>
+  </div>
+
+  <div uib-carousel active="widgetIndex">
+    <div uib-slide ng-repeat="widget in widgets track by widget.id" index="widgetIndex">
+
+      <div class="widget-name">
+        {{ widget.name }}
+      </div>
+
+      <div class="widget-content">
+
+      </div>
+
+    </div>
+  </div>
+
+</div>

@@ -133,7 +133,8 @@ angular.module('impac.components.widgets-common',
 );
 angular.module('impac.components.common',
   [
-    'impac.components.common.data-not-found'
+    'impac.components.common.data-not-found',
+    'impac.components.common.presentation'
   ]
 );
 /*
