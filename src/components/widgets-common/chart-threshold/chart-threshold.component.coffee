@@ -69,8 +69,9 @@ module.component('chartThreshold', {
     ctrl.saveKpi = ->
       return if ctrl.loading
       ctrl.loading = true
+      ctrl.kpi.element_watched = ctrl.kpi.watchables[0]
       params = targets: {}, metadata: {}
-      params.targets[ctrl.kpi.watchables[0]] = [{
+      params.targets[ctrl.kpi.element_watched] = [{
         "#{ctrl.kpiTargetMode}": ctrl.draftTarget.value
       }]
       return unless ImpacKpisSvc.validateKpiTargets(params.targets)
@@ -86,9 +87,7 @@ module.component('chartThreshold', {
         else
           params.metadata.hist_parameters = ImpacUtilities.yearDates()
         params.widget_id = ctrl.widget.id
-        ImpacKpisSvc.create(
-          ctrl.widget.metadata.bolt_path, ctrl.kpi.endpoint, ctrl.kpi.watchables[0], params
-        ).then(
+        ImpacKpisSvc.create(ctrl.kpi, params).then(
           (kpi)->
             ctrl.widget.kpis.push(kpi)
             kpi

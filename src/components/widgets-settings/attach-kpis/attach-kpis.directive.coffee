@@ -61,8 +61,9 @@ module.directive('settingAttachKpis', ($templateCache, ImpacWidgetsSvc, ImpacKpi
           params.extra_params[param] = paramValues.uid
 
         console.log('attachKpis: ', $scope.kpi.endpoint, $scope.elementWatched, params)
+        $scope.kpi.element_watched = $scope.elementWatched
 
-        ImpacKpisSvc.create('impac', $scope.kpi.endpoint, $scope.elementWatched, params).then(
+        ImpacKpisSvc.create($scope.kpi, params).then(
           (kpi)->
             console.log('attached KPI: ', kpi)
             $scope.attachedKpis.push(kpi)

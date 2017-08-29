@@ -227,8 +227,7 @@ angular
         kpisTemplatesPromises.push $http.get("#{bolt.path}/kpis").then(
           (response) ->
             for template in response.data.kpis
-              template.metadata ||= {}
-              template.metadata.bolt_path = bolt.path
+              template.source = bolt.path
               kpisTemplates.push(template)
           (error) ->
             $log.error("Impac! - KpisSvc: cannot retrieve kpis templates from bolt", "#{bolt.path}/kpis")
@@ -253,18 +252,18 @@ angular
           params.extra_params = kpi.extra_params if kpi.extra_params?
           params.extra_watchables = kpi.extra_watchables if kpi.extra_watchables?
 
-          switch kpi.source
+          host = switch kpi.source
             when 'impac'
-              host = ImpacRoutes.kpis.show(_self.getCurrentDashboard().id, kpi.id)
+              ImpacRoutes.kpis.show(_self.getCurrentDashboard().id, kpi.id)
             when 'local'
-              host = ImpacRoutes.kpis.local()
+              ImpacRoutes.kpis.local()
             else
               if _.isEmpty(kpi.source)
                 err = { message: 'Impac! - KpisSvc: cannot show a KPI without a valid source' }
                 $log.error(err.message)
                 return $q.reject(err)
               # Retreive KPI from external source (bolts)
-              host = kpi.source
+              kpi.source
 
           url = formatShowQuery(host, kpi.endpoint, kpi.element_watched, params)
 
@@ -284,7 +283,12 @@ angular
           $q.reject({error: { message: 'Impac! - KpisSvc: Service is not initialized' }})
       ).finally ( -> kpi.isLoading = false )
 
-    @create = (source, endpoint, elementWatched, opts={}) ->
+    @create = (kpi, opts = {}) ->
+      source = kpi.source || 'impac'
+      endpoint = kpi.endpoint
+      elementWatched = kpi.element_watched
+
+
       deferred = $q.defer()
       _self.load().then(
         ->
